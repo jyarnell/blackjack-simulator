@@ -159,7 +159,6 @@ const BlackjackGame = () => {
   const [lastPlayerTotal, setLastPlayerTotal] = useState(0);
   const [lastDealerTotal, setLastDealerTotal] = useState(0);
   const [lastHandResult, setLastHandResult] = useState('');
-  const [resultsHistory, setResultsHistory] = useState([]); // Store results of previous hands
   const autoplayTimeoutRef = useRef(null); // Ref to store the autoplay timeout ID
 
   // --- Helper Functions for Game Logic ---
@@ -180,7 +179,6 @@ const BlackjackGame = () => {
     setLastDealerTotal(0);
     setLastHandResult('');
     setAutoPlayMode(false);
-    setResultsHistory([]);
     clearTimeout(autoplayTimeoutRef.current);
   };
 
@@ -222,24 +220,20 @@ const BlackjackGame = () => {
     if (playerVal === 21 && newPlayerHand.length === 2) {
       if (dealerVal === 21 && newDealerHand.length === 2) {
         // Both have Blackjack
-        //setTimeout(() => {
         setMessage('Both have Blackjack! Push.');
         setBankroll(prev => prev + betAmount); // Return bet
         setGamePhase('result');
         setLastHandResult('Push');
         setLastPlayerTotal(playerVal);
         setLastDealerTotal(dealerVal);
-        //}, 100); // Reduced delay for faster auto-play
       } else {
         // Player Blackjack
-        //setTimeout(() => {
         setMessage('Blackjack! You win!');
         setBankroll(prev => prev + betAmount * 2); // Bet + Win (1:1 payout)
         setGamePhase('result');
         setLastHandResult('Win');
         setLastPlayerTotal(playerVal);
         setLastDealerTotal(dealerVal);
-        //}, 100); // Reduced delay for faster auto-play
       }
     }
     if (dealerVal === 21 && newDealerHand.length === 2) {
@@ -248,16 +242,6 @@ const BlackjackGame = () => {
       setLastHandResult('Loss');
       setLastPlayerTotal(playerVal);
       setLastDealerTotal(dealerVal);
-      // setResultsHistory(prevResults => [
-      //   ...prevResults,
-      //   {
-      //     playerTotal: playerVal,
-      //     dealerTotal: dealerVal,
-      //     result: 'Loss',
-      //     bet: betAmount,
-      //     bankroll: bankroll
-      //   }
-      // ]);
     }
   };
 
@@ -299,16 +283,6 @@ const BlackjackGame = () => {
       setLastHandResult('Loss');
       setLastPlayerTotal(playerTotal);
       setLastDealerTotal(calculateHandValue(dealerHand).total);
-      // setResultsHistory(prevResults => [
-      //   ...prevResults,
-      //   {
-      //     playerTotal: playerTotal,
-      //     dealerTotal: 0,
-      //     result: 'Loss',
-      //     bet: betAmount,
-      //     bankroll: bankroll
-      //   }
-      // ]);
     } else {
       // Only update message if not auto-playing or for manual hit
       if (!autoPlayMode) {
@@ -425,16 +399,6 @@ const BlackjackGame = () => {
     if (newBankroll !== bankroll) {
       setBankroll(newBankroll);
     }
-    // setResultsHistory(prevResults => [
-    //   ...prevResults, // Copy all existing results
-    //   {
-    //     playerTotal: playerVal,
-    //     dealerTotal: dealerVal,
-    //     result: handResult,
-    //     bet: bet,
-    //     bankroll: newBankroll
-    //   }
-    // ]);
   };
 
   /**
@@ -513,16 +477,9 @@ const BlackjackGame = () => {
     if (gamePhase === 'betting') {
       setMessage('Auto-play: Dealing new hand...');
       dealHand();
-      // autoplayTimeoutRef.current = setTimeout(() => {
-      //   dealHand();
-      // }, 200); // Reduced delay before dealing the next hand
     } else if (gamePhase === 'playerTurn') {
       setMessage('Auto-play: Player\'s turn...');
       autoPlayPlayerTurnAction();
-      // Call the player's auto-play action after a slight delay
-      // autoplayTimeoutRef.current = setTimeout(() => {
-      //   autoPlayPlayerTurnAction();
-      // }, 100); // Reduced delay before player makes a move
     } else if (gamePhase === 'dealerTurn') {
       // Dealer's turn is handled by the separate useEffect, which calls dealerPlay.
       // dealerPlay itself has internal delays. This phase is more of a waiting phase for auto-play.
@@ -530,10 +487,6 @@ const BlackjackGame = () => {
     } else if (gamePhase === 'result') {
       setMessage(`Auto-play: Hand ended. ${lastHandResult}. Starting next hand...`);
       setGamePhase('betting');
-      // autoplayTimeoutRef.current = setTimeout(() => {
-      //   // After a hand concludes, transition back to 'betting' to start the next auto-played hand
-      //   setGamePhase('betting');
-      // }, 200); // Reduced delay before starting next hand
     }
 
     // Cleanup: Clear timeout if the component unmounts or if dependencies change and the effect re-runs
@@ -602,59 +555,10 @@ const BlackjackGame = () => {
 
   // --- Main Component Render ---
   return (
-    <div className="min-h-screen min-w-screen bg-gradient-to-br from-green-700 to-green-900 text-white font-inter p-4 flex flex-col items-center justify-center space-y-6">
-      <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 text-yellow-300 drop-shadow-lg">
-        Blackjack Simulator
+    <div className="min-h-screen min-w-screen bg-[#1C2E7A] text-white font-inter p-4 flex flex-col items-center justify-center space-y-6">
+      <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 text-white-300 drop-shadow-lg">
+        Royal Caribbean Video Blackjack Simulator
       </h1>
-
-      {/* Control Buttons - Moved to a static location at the top */}
-      <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-6"> {/* Added mb-6 for spacing */}
-        <button
-          className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-lg sm:text-xl md:text-2xl"
-          onClick={dealHand}
-          disabled={(gamePhase !== 'betting' && gamePhase !== 'result') || autoPlayMode}
-        >
-          Deal
-        </button>
-        <button
-          className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-lg sm:text-xl md:text-2xl"
-          onClick={hitPlayer}
-          disabled={gamePhase !== 'playerTurn' && gamePhase !== 'autoPlay'}
-        >
-          Hit
-        </button>
-        <button
-          className="bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-lg sm:text-xl md:text-2xl"
-          onClick={standPlayer}
-          disabled={gamePhase !== 'playerTurn' && gamePhase !== 'autoPlay'}
-        >
-          Stand
-        </button>
-        <button
-          className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-lg sm:text-xl md:text-2xl"
-          onClick={() => {
-            // Just toggle autoPlayMode. The gamePhase transition will be handled by useEffect.
-            setAutoPlayMode(prev => {
-              if (prev) { // If turning OFF auto-play
-                clearTimeout(autoplayTimeoutRef.current);
-                setMessage('Auto-play stopped.');
-              } else { // If turning ON auto-play
-                setMessage('Auto-play started...');
-              }
-              return !prev;
-            });
-          }}
-        >
-          {autoPlayMode ? 'Stop Auto Play' : 'Auto Play'}
-        </button>
-        <button
-          className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-lg sm:text-xl md:text-2xl"
-          onClick={resetGame}
-          disabled={autoPlayMode}
-        >
-          Reset Game
-        </button>
-      </div>
 
       {/* Scoreboard and Stats */}
       <div className="w-full max-w-4xl bg-gray-800 rounded-xl p-4 sm:p-6 shadow-2xl flex flex-wrap justify-around items-center gap-4 text-lg sm:text-xl md:text-2xl font-semibold border-b-4 border-yellow-500">
@@ -678,7 +582,7 @@ const BlackjackGame = () => {
             onChange={(e) => setBetAmount(parseInt(e.target.value))}
             disabled={gamePhase !== 'betting'}
           >
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(amount => (
+            {[1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(amount => (
               <option key={amount} value={amount}>${amount}</option>
             ))}
           </select>
@@ -699,6 +603,55 @@ const BlackjackGame = () => {
           {renderHand(playerHand, false)}
         </div>
 
+        {/* Control Buttons */}
+        <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-6"> {/* Added mb-6 for spacing */}
+          <button
+            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-lg sm:text-xl md:text-2xl"
+            onClick={dealHand}
+            disabled={(gamePhase !== 'betting' && gamePhase !== 'result') || autoPlayMode}
+          >
+            Deal
+          </button>
+          <button
+            className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-lg sm:text-xl md:text-2xl"
+            onClick={hitPlayer}
+            disabled={gamePhase !== 'playerTurn' && gamePhase !== 'autoPlay'}
+          >
+            Hit
+          </button>
+          <button
+            className="bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-lg sm:text-xl md:text-2xl"
+            onClick={standPlayer}
+            disabled={gamePhase !== 'playerTurn' && gamePhase !== 'autoPlay'}
+          >
+            Stand
+          </button>
+          <button
+            className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-lg sm:text-xl md:text-2xl"
+            onClick={() => {
+              // Just toggle autoPlayMode. The gamePhase transition will be handled by useEffect.
+              setAutoPlayMode(prev => {
+                if (prev) { // If turning OFF auto-play
+                  clearTimeout(autoplayTimeoutRef.current);
+                  setMessage('Auto-play stopped.');
+                } else { // If turning ON auto-play
+                  setMessage('Auto-play started...');
+                }
+                return !prev;
+              });
+            }}
+          >
+            {autoPlayMode ? 'Stop Auto Play' : 'Auto Play'}
+          </button>
+          <button
+            className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-lg sm:text-xl md:text-2xl"
+            onClick={resetGame}
+            disabled={autoPlayMode}
+          >
+            Reset Game
+          </button>
+        </div>
+
         {/* Game Messages */}
         <div className="bg-gray-900 text-yellow-400 p-3 sm:p-4 rounded-lg text-center text-lg sm:text-xl md:text-2xl font-bold border-2 border-yellow-500 min-h-[140px] flex flex-col justify-center">
           {message}
@@ -716,42 +669,6 @@ const BlackjackGame = () => {
         <p>Dealer stands on all 17. No splits or doubles.</p>
         <p>Blackjack pays 1:1. Player wins automatically if reaching 6 cards &#8804; 21.</p>
         <p>Dealer loses if drawing 6 cards without reaching at least 17.</p>
-      </div>
-      <div className="w-full max-w-4xl bg-gray-800 rounded-xl p-4 sm:p-6 shadow-2xl mt-6">
-        <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-yellow-300">Hand History</h2>
-        {resultsHistory.length > 0 ? (
-          <div className="overflow-x-auto"> {/* Added for horizontal scrolling on small screens */}
-            <div className="min-w-max"> {/* Ensures grid doesn't collapse */}
-              {/* Grid Header Row */}
-              <div className="grid grid-cols-5 gap-4 py-2 px-3 bg-gray-700 rounded-t-lg font-semibold text-lg sm:text-xl">
-                <div>P. Total</div>
-                <div>D. Total</div>
-                <div>Result</div>
-                <div>Bet</div>
-                <div>Bankroll</div>
-              </div>
-              {/* Grid Data Rows */}
-              <div className="max-h-60 overflow-y-auto"> {/* Added max height and scroll */}
-                {resultsHistory.slice().reverse().map((result, index) => ( // Reverse to show latest at top
-                  <div
-                    key={index} // Use index if items are not reordered/deleted. Better to have a unique ID if possible.
-                    className={`grid grid-cols-5 gap-4 py-2 px-3 text-md sm:text-lg ${index % 2 === 0 ? 'bg-gray-700' : 'bg-gray-900'} rounded-lg mb-1`}
-                  >
-                    <div className="py-1 px-2">{result.playerTotal}</div>
-                    <div className="py-1 px-2">{result.dealerTotal}</div>
-                    <div className={`py-1 px-2 font-bold ${result.result === 'Win' ? 'text-green-400' : (result.result === 'Loss' ? 'text-red-400' : 'text-gray-400')}`}>
-                      {result.result}
-                    </div>
-                    <div className="py-1 px-2">${result.bet}</div>
-                    <div className="py-1 px-2">${result.bankroll}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <p className="text-center text-gray-400">No hands played yet.</p>
-        )}
       </div>
     </div>
   );
